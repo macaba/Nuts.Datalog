@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nuts.Datalog.Web", "Nuts.Datalog.Web\Nuts.Datalog.Web.csproj", "{BB761DFF-9F5D-44AC-8FBA-B8AE4A443BBF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nuts.Datalog", "Nuts.Datalog\Nuts.Datalog.csproj", "{5C22E600-4394-454A-B3A0-81ECC6FEA4BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB761DFF-9F5D-44AC-8FBA-B8AE4A443BBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB761DFF-9F5D-44AC-8FBA-B8AE4A443BBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB761DFF-9F5D-44AC-8FBA-B8AE4A443BBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB761DFF-9F5D-44AC-8FBA-B8AE4A443BBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C22E600-4394-454A-B3A0-81ECC6FEA4BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C22E600-4394-454A-B3A0-81ECC6FEA4BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C22E600-4394-454A-B3A0-81ECC6FEA4BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C22E600-4394-454A-B3A0-81ECC6FEA4BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {81B5A435-9986-456C-9EB7-E0577BF76E42}
+	EndGlobalSection
+EndGlobal

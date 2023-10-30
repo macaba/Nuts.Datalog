@@ -1,0 +1,39 @@
+{
+  // ApiFields configures the fields allowed in the API requests. Type is an enum of the allowed types, ApiField is the key of the field in the API request.
+  "ApiFields": [
+    {
+      "Type": "Timestamp",
+      "ApiField": "timestamp"
+    },
+    {
+      "Type": "Double",
+      "ApiField": "reading"
+    }
+  ],
+  // Columns configures the columns in the CSV data file. Name is written in the CSV header, StringInterpolation is the format string used to write the value.
+  "Columns": [
+    {
+      "Name": "Server timestamp",
+      "StringInterpolation": "{ServerTimestamp:O}"
+    },
+    {
+      "Name": "Server timestamp (Excel)",
+      "StringInterpolation": "{ServerTimestampExcel}"
+    },
+    {
+      "Name": "Server seconds since creation",
+      "StringInterpolation": "{ServerSecondsSinceCreation:F3}"
+    },
+    {
+      "Name": "Reading timestamp",
+      "StringInterpolation": "{timestamp:O}"
+    },
+    {
+      "Name": "3458A reading",
+      "StringInterpolation": "{reading:F7}"
+    }
+  ],
+  "Metadata": {
+    "CreationTimestampUtc": null
+  }
+}
