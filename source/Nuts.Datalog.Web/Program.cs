@@ -4,7 +4,7 @@ using Nuts.Datalog;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-DatalogWriterCache datalogWriterCache = new(Directory.GetCurrentDirectory());
+DatalogWriterCache datalogWriterCache = new(Path.Combine(Directory.GetCurrentDirectory(), "Configs"), Path.Combine(Directory.GetCurrentDirectory(), "Datalogs"));
 
 app.MapGet("/", (httpContext) =>
 {

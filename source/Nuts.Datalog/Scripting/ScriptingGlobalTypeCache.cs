@@ -1,7 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CSharp;
+using System.CodeDom;
+using System.CodeDom.Compiler;
 using System.Collections.Immutable;
+using System.Dynamic;
 using System.Reflection;
+using System.Text;
 
 namespace Nuts.Datalog.Scripting
 {
@@ -11,7 +16,7 @@ namespace Nuts.Datalog.Scripting
     /// ref: https://github.com/dotnet/roslyn/issues/2246
     /// ref: https://github.com/dotnet/roslyn/pull/6254
     /// </summary>
-    public class CSharpCompilationScriptGlobalTypeBuilder
+    public class ScriptingGlobalTypeCache
     {
 
         private const string TEMPLATE = @"
@@ -19,8 +24,7 @@ using System;
 using System.Collections.Generic;
 public class {0}
 {{
-    public {0}(
-        IDictionary<string, Object> extensions)
+    public {0}(IDictionary<string, Object> extensions)
     {{
         {1}
     }}
@@ -28,11 +32,11 @@ public class {0}
 }}";
 
         private int unique = 0;
-        private readonly IDictionary<string, GlobalTypeInfo> _cache;
+        private readonly IDictionary<string, GlobalTypeInfo> cache;
 
-        public CSharpCompilationScriptGlobalTypeBuilder()
+        public ScriptingGlobalTypeCache()
         {
-            _cache = new Dictionary<string, GlobalTypeInfo>();
+            cache = new Dictionary<string, GlobalTypeInfo>();
         }
 
         private static PortableExecutableReference GetMetadataReference(Type type)
@@ -41,28 +45,27 @@ public class {0}
             return MetadataReference.CreateFromFile(assemblyLocation);
         }
 
-        public GlobalTypeInfo Create(string key, IDictionary<string, object> extensions)
+        public GlobalTypeInfo Get(string key, IDictionary<string, object> extensions)
         {
             // No locking. the worst that happens is we generate the type
             // multiple times and throw all but one away. 
-            if (!_cache.TryGetValue(key, out var item))
+            if (!cache.TryGetValue(key, out var item))
             {
-                item = CreateCore(key, extensions.ToDictionary(x => x.Key, x => x.Value.GetType()));
-                _cache[key] = item;
+                item = Create(key, extensions.ToDictionary(x => x.Key, x => x.Value.GetType()));
+                cache[key] = item;
             }
             return item;
         }
 
-        private GlobalTypeInfo CreateCore(string key, IDictionary<string, Type> extensionDetails)
+        private GlobalTypeInfo Create(string key, IDictionary<string, Type> extensionDetails)
         {
             var count = Interlocked.Increment(ref unique);
             var typeName = $"DynamicType{count}";
 
             var code = string.Format(TEMPLATE,
                 typeName,
-                string.Join(System.Environment.NewLine, extensionDetails.Select(pair => $"{pair.Key} = ({pair.Value.FullName})extensions[\"{pair.Key}\"];")),
-                string.Join(System.Environment.NewLine, extensionDetails.Select(pair => $"public {pair.Value.FullName} {pair.Key} {{ get; }}")));
-
+                string.Join(System.Environment.NewLine, extensionDetails.Select(pair => $"{pair.Key} = ({TypeToString(pair.Value)})extensions[\"{pair.Key}\"];")),
+                string.Join(System.Environment.NewLine, extensionDetails.Select(pair => $"public {TypeToString(pair.Value, expandoToDynamic: true)} {pair.Key} {{ get; }}")));
 
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(code);
 
@@ -76,7 +79,7 @@ public class {0}
                 .Select(a => MetadataReference.CreateFromFile(Assembly.Load(a).Location))
                 .Concat(extensionDetails.Values.Select(GetMetadataReference))
                 .Append(GetRuntimeSpecificReference())
-                .Append(GetMetadataReference(typeof(CSharpCompilationScriptGlobalTypeBuilder)))
+                .Append(GetMetadataReference(typeof(ScriptingGlobalTypeCache)))
                 .Append(GetMetadataReference(typeof(System.Linq.Enumerable)))
                 .Append(GetMetadataReference(typeof(System.Runtime.AssemblyTargetedPatchBandAttribute)))
                 .Append(GetMetadataReference(typeof(Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo)))
@@ -84,8 +87,6 @@ public class {0}
                 .Append(GetMetadataReference(typeof(object)))
                 .Append(GetMetadataReference(typeof(GlobalTypeInfo)))
                 .ToArray();
-
-
 
             Compilation compilation = CSharpCompilation.Create(
                 $"ScriptGlobalTypeBuilder{count}", new[] { syntaxTree }, references,
@@ -104,7 +105,6 @@ public class {0}
             };
         }
 
-
         private static PortableExecutableReference GetRuntimeSpecificReference()
         {
             var assemblyLocation = typeof(object).Assembly.Location;
@@ -112,6 +112,23 @@ public class {0}
             var libraryPath = Path.Join(runtimeDirectory, @"netstandard.dll");
 
             return MetadataReference.CreateFromFile(libraryPath);
+        }
+
+        public static string TypeToString(Type type, bool expandoToDynamic = false)
+        {
+            if (type == null) throw new ArgumentNullException("type");
+            if (expandoToDynamic)
+                if (type == typeof(ExpandoObject)) return "dynamic";
+
+            var sb = new StringBuilder();
+            using (var sw = new StringWriter(sb))
+            {
+                var expr = new CodeTypeReferenceExpression(type);
+
+                var prov = new CSharpCodeProvider();
+                prov.GenerateCodeFromExpression(expr, sw, new CodeGeneratorOptions());
+            }
+            return sb.ToString();
         }
     }
 }

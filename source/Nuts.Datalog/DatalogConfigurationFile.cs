@@ -1,57 +1,70 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.Converters;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nuts.Datalog
 {
     // The datalog.json and datalog.csv will have the same filename (different extension) and will be in the same directory
-    public class DatalogJsonConfiguration
+    public class DatalogConfigurationFile
     {
-        public List<DatalogJsonApiField> ApiFields { get; set; }
-        public List<DatalogJsonConfigurationColumn> Columns { get; set; }
-        public DatalogJsonMetadata Metadata { get; set; }
+        public List<DatalogConfigApiField> ApiFields { get; set; }
+        public List<DatalogConfigCodeField> CodeFields { get; set; }
+        public List<DatalogConfigColumn> Columns { get; set; }
 
         public void WriteToDisk(string path)
         {
-            var options = new JsonSerializerOptions { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip };
-            var converter = new JsonStringEnumConverter();
-            options.Converters.Add(converter);
-            string jsonString = JsonSerializer.Serialize(this, options);
-            File.WriteAllText(path, jsonString);
+            //var options = new JsonSerializerOptions { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip };
+            //var converter = new JsonStringEnumConverter();
+            //options.Converters.Add(converter);
+            //var json = JsonSerializer.Serialize(this, options);
+            //File.WriteAllText(path, json);
+
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .WithTypeConverter(new DateTimeOffsetConverter())
+                .Build();
+            var yaml = serializer.Serialize(this);
+            File.WriteAllText(path, yaml);
         }
 
-        public static DatalogJsonConfiguration ReadFromDisk(string path)
+        public static DatalogConfigurationFile ReadFromDisk(string path)
         {
-            var options = new JsonSerializerOptions { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip };
-            var converter = new JsonStringEnumConverter();
-            options.Converters.Add(converter);
-            string jsonString = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<DatalogJsonConfiguration>(jsonString, options);
+            //var options = new JsonSerializerOptions { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip };
+            //var converter = new JsonStringEnumConverter();
+            //options.Converters.Add(converter);
+            //var json = File.ReadAllText(path);
+            //return JsonSerializer.Deserialize<DatalogConfigurationFile>(json, options);
+
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .WithTypeConverter(new DateTimeOffsetConverter())
+                .Build();
+            var yaml = File.ReadAllText(path);
+            return deserializer.Deserialize<DatalogConfigurationFile>(yaml);
         }
     }
 
-    public class DatalogJsonApiField
+    public class DatalogConfigApiField
     {
-        public required string ApiField { get; set; }
-        public required DatalogType Type { get; set; }
+        public required string Field { get; set; }
+        public required DatalogFieldType Type { get; set; }
     }
 
-    public class DatalogJsonConfigurationColumn
+    public class DatalogConfigCodeField
     {
-        public required string Name { get; set; }
-        public required string StringInterpolation { get; set; }
+        public required string Field { get; set; }
+        public required DatalogFieldType Type { get; set; }
+        public required string Code { get; set; }
     }
 
-    public class DatalogJsonMetadata
+    public class DatalogConfigColumn
     {
-        public DateTimeOffset? CreationTimestampUtc { get; set; }
+        public required string Field { get; set; }
+        public required string Header { get; set; }
+        public required string Format { get; set; }
     }
 
-    public class DatalogJsonCharts
-    {
-
-    }
-
-    public enum DatalogType
+    public enum DatalogFieldType
     {
         String,
         Int32,
@@ -59,10 +72,4 @@ namespace Nuts.Datalog
         Double,
         Timestamp
     }
-
-    //public enum DatalogColumnSource
-    //{
-    //    ApiInput,               // Data comes from input API
-    //    StringInterpolation,    // Data is derived from other columns or inline code
-    //}
 }

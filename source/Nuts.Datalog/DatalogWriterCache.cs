@@ -1,17 +1,17 @@
-﻿using Nuts.Datalog.Scripting;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 
 namespace Nuts.Datalog
 {
     public class DatalogWriterCache
     {
-        private readonly string directory;
+        private readonly string configDirectory;
+        private readonly string datalogDirectory;
         private readonly ConcurrentDictionary<string, DatalogWriter> datalogWriters = new();
-        CSharpCompilationScriptGlobalTypeBuilder factory = new();
 
-        public DatalogWriterCache(string directory)
+        public DatalogWriterCache(string configDirectory, string datalogDirectory)
         {
-            this.directory = directory;
+            this.configDirectory = configDirectory;
+            this.datalogDirectory = datalogDirectory;
         }
 
         public bool TryGetDatalogWriter(string name, out DatalogWriter writer)
@@ -21,10 +21,10 @@ namespace Nuts.Datalog
                 return true;
             }
 
-            var jsonFilePath = Path.Combine(directory, name + ".json");
-            if (File.Exists(jsonFilePath))
+            var configFilePath = Path.Combine(configDirectory, name + ".config");
+            if (File.Exists(configFilePath))
             {
-                writer = new DatalogWriter(jsonFilePath, factory);
+                writer = new DatalogWriter(configFilePath, datalogDirectory);
                 datalogWriters.TryAdd(name, writer);
 
                 return true;
