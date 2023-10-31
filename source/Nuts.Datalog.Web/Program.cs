@@ -21,7 +21,7 @@ app.MapPost("/api/datalog/{text}", ([FromRoute] string text, [FromBody] CaseInse
     }
     else
     {
-        return Results.BadRequest($"JSON file with name \"{text}\" not found");
+        return Results.BadRequest($"Config file with name \"{text}\" not found");
     }
     return Results.Ok();
 });
