@@ -3,9 +3,46 @@
 <head>
     <meta charset="utf-8" />
     <title>Nuts.Datalog</title>
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.2/cdn/themes/light.css" />-->
 </head>
 <body>
-    A dropdown box showing the available log files.
-    A chart showing the data in the selected log file.
+    <select name="datalogNames" id="datalogNames"></select><input type="button" id="refreshButton" value="Refresh" />
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.2/cdn/shoelace-autoloader.js"></script>
+    <script src="lib/signalr@7.0.12/signalr.js"></script>
+    <script>
+        "use strict";
+
+        var connection = new signalR.HubConnectionBuilder().withUrl("/datalogHub").build();
+
+        //Disable the send button until connection is established.
+        document.getElementById("refreshButton").disabled = true;
+
+        connection.on("Enumeration", function (datalogNames) {
+            var select = document.getElementById("datalogNames");
+            select.innerHTML = "";
+            for (var i = 0; i < datalogNames.length; i++) {
+                var option = document.createElement("option");
+                select.appendChild(option);
+                option.textContent = `${datalogNames[i]}`;
+            }
+        });
+
+        connection.start().then(function () {
+            document.getElementById("refreshButton").disabled = false;
+            connection.invoke("Enumerate").catch(function (err) {
+                return console.error(err.toString());
+            });
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        document.getElementById("refreshButton").addEventListener("click", function (event) {
+            connection.invoke("Enumerate").catch(function (err) {
+                return console.error(err.toString());
+            });
+            event.preventDefault();
+        });
+    </script>
 </body>
 </html>

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nuts.Datalog.Web", "Nuts.Da
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nuts.Datalog", "Nuts.Datalog\Nuts.Datalog.csproj", "{5C22E600-4394-454A-B3A0-81ECC6FEA4BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nuts.Datalog.Testbench", "Nuts.Datalog.Testbench\Nuts.Datalog.Testbench.csproj", "{5F68DF7B-0937-4DA8-8AF9-349729A41FC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nuts.Datalog.Testbench", "Nuts.Datalog.Testbench\Nuts.Datalog.Testbench.csproj", "{5F68DF7B-0937-4DA8-8AF9-349729A41FC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

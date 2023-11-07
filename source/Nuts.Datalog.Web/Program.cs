@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Nuts.Datalog;
+using Nuts.Datalog.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSignalR();
 var app = builder.Build();
 
 DatalogWriterCache datalogWriterCache = new(Path.Combine(Directory.GetCurrentDirectory(), "Configs"), Path.Combine(Directory.GetCurrentDirectory(), "Datalogs"));
@@ -25,4 +27,7 @@ app.MapPost("/api/datalog/{text}", ([FromRoute] string text, [FromBody] CaseInse
     }
     return Results.Ok();
 });
+
+app.UseStaticFiles();
+app.MapHub<DatalogHub>("/datalogHub");
 app.Run();
