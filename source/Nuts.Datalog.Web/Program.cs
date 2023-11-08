@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Nuts.Datalog;
 using Nuts.Datalog.Web;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddJsonProtocol(options => { options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 var app = builder.Build();
 
 DatalogWriterCache datalogWriterCache = new(Path.Combine(Directory.GetCurrentDirectory(), "Configs"), Path.Combine(Directory.GetCurrentDirectory(), "Datalogs"));

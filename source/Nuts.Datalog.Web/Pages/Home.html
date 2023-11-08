@@ -3,32 +3,90 @@
 <head>
     <meta charset="utf-8" />
     <title>Nuts.Datalog</title>
+    <link rel="stylesheet" href="lib/uPlot@1.6.27/uPlot.min.css" />
     <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.2/cdn/themes/light.css" />-->
 </head>
 <body>
-    <select name="datalogNames" id="datalogNames"></select><input type="button" id="refreshButton" value="Refresh" />
+    <label for="datalogName">Datalog:</label><select name="datalogName" id="datalogName" onchange="datalogNameSelectEvent(this)"></select><input type="button" id="refreshButton" value="Refresh" />
+    <br />
+    <label for="xAxisColumn">X axis column:</label><select name="xAxisColumn" id="xAxisColumn" onchange="xAxisColumnSelectEvent(this)"></select>
+    <br />
+    <label for="yAxisColumn">Y axis column:</label><select name="yAxisColumn" id="yAxisColumn" onchange="yAxisColumnSelectEvent(this)"></select>
+    <br />
+    <input type="button" id="loadChartButton" value="Load chart" />
 
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.2/cdn/shoelace-autoloader.js"></script>
-    <script src="lib/signalr@7.0.12/signalr.js"></script>
+    <!--<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.2/cdn/shoelace-autoloader.js"></script>-->
+    <script src="lib/uPlot@1.6.27/uPlot.iife.min.js"></script>
+    <script src="lib/signalr@7.0.12/signalr.min.js"></script>
     <script>
         "use strict";
 
         var connection = new signalR.HubConnectionBuilder().withUrl("/datalogHub").build();
+        var dataCache = null;
+        var datalogNamePlaceholderValue = `Select datalog...`;
+        var xAxisColumnPlaceholderValue = `Select X axis column...`;
+        var yAxisColumnPlaceholderValue = `Select Y axis column...`;
 
         //Disable the send button until connection is established.
         document.getElementById("refreshButton").disabled = true;
 
-        connection.on("Enumeration", function (datalogNames) {
-            var select = document.getElementById("datalogNames");
+        connection.on("Enumerate", function (datalogName) {
+            var select = document.getElementById("datalogName");
             select.innerHTML = "";
-            for (var i = 0; i < datalogNames.length; i++) {
+            var option = document.createElement("option");
+            option.hidden = true;
+            option.disabled = true;
+            option.selected = true;
+            option.textContent = datalogNamePlaceholderValue;
+            select.appendChild(option);
+
+            for (var i = 0; i < datalogName.length; i++) {
                 var option = document.createElement("option");
                 select.appendChild(option);
-                option.textContent = `${datalogNames[i]}`;
+                option.textContent = `${datalogName[i]}`;
+            }
+        });
+
+        connection.on("Data", function (data) {
+            // SignalR data received
+            console.log(data);
+            dataCache = data;
+
+            // X-axis select
+            var xAxisSelect = document.getElementById("xAxisColumn");
+            xAxisSelect.innerHTML = "";
+            var option = document.createElement("option");
+            option.hidden = true;
+            option.disabled = true;
+            option.selected = true;
+            option.textContent = `Select X axis column...`;
+            xAxisSelect.appendChild(option);
+
+            for (var i = 0; i < data.columns.length; i++) {
+                var option = document.createElement("option");
+                xAxisSelect.appendChild(option);
+                option.textContent = `${data.columns[i].header}`;
+            }
+
+            // Y-axis select
+            var yAxisSelect = document.getElementById("yAxisColumn");
+            yAxisSelect.innerHTML = "";
+            var option = document.createElement("option");
+            option.hidden = true;
+            option.disabled = true;
+            option.selected = true;
+            option.textContent = `Select Y axis column...`;
+            yAxisSelect.appendChild(option);
+
+            for (var i = 0; i < data.columns.length; i++) {
+                var option = document.createElement("option");
+                yAxisSelect.appendChild(option);
+                option.textContent = `${data.columns[i].header}`;
             }
         });
 
         connection.start().then(function () {
+            // SignalR connected
             document.getElementById("refreshButton").disabled = false;
             connection.invoke("Enumerate").catch(function (err) {
                 return console.error(err.toString());
@@ -37,12 +95,117 @@
             return console.error(err.toString());
         });
 
-        document.getElementById("refreshButton").addEventListener("click", function (event) {
+        // ====== Events ==================================================================
+        function refreshButtonEvent(e) {
             connection.invoke("Enumerate").catch(function (err) {
                 return console.error(err.toString());
             });
-            event.preventDefault();
-        });
+        }
+
+        var refreshButton = document.getElementById("refreshButton");
+        refreshButton.addEventListener("click", refreshButtonEvent);
+        refreshButton.addEventListener("touchstart", refreshButtonEvent);
+
+        function loadChartButtonEvent(e) {
+            var datalogName = document.getElementById("datalogName").value;
+            var xAxisColumn = document.getElementById("xAxisColumn").value;
+            var yAxisColumn = document.getElementById("yAxisColumn").value;
+
+            if (dataCache == null || datalogName == datalogNamePlaceholderValue || xAxisColumn == xAxisColumnPlaceholderValue || yAxisColumn == yAxisColumnPlaceholderValue)
+                return;
+
+
+            // Now iterate through dataCache to find the indices of the columns
+            var xAxisColumnIndex = -1;
+            var yAxisColumnIndex = -1;
+            for (var i = 0; i < dataCache.columns.length; i++) {
+                if (dataCache.columns[i].header == xAxisColumn)
+                    xAxisColumnIndex = i;
+                if (dataCache.columns[i].header == yAxisColumn)
+                    yAxisColumnIndex = i;
+            }
+            var xValues = [];
+            var yValues = [];
+            for (var i = 0; i < dataCache.data.length; i++) {
+                var x = dataCache.data[i][xAxisColumnIndex];
+                var y = dataCache.data[i][yAxisColumnIndex];
+                xValues.push(x);
+                yValues.push(y);
+            }
+
+
+            //let data = [
+            //    [1546300800, 1546387200],    // x-values (timestamps)
+            //    [35, 71],    // y-values (series 1)
+            //    [90, 15],    // y-values (series 2)
+            //];
+
+            let data = [
+                xValues,
+                yValues
+            ];
+
+
+            let opts = {
+                title: datalogName,
+                id: "chart1",
+                class: "my-chart",
+                width: 800,
+                height: 600,
+                legend: {
+                    show: false,
+                },
+                scales: {
+                    x: {
+                        time: false,
+                    },
+                },
+                series: [
+                    {},
+                    {
+                        show: true,
+                        spanGaps: false,
+                        label: yAxisColumn,
+                        stroke: "red",
+                        width: 1,
+                    }
+                ],
+                axes: [
+                    {
+                        //	size: 30,
+                        label: xAxisColumn,
+                        //labelSize: 20,
+                    },
+                    {
+                        //space: 50,
+                        //	size: 40,
+                        //side: 1,
+                        label: yAxisColumn,
+                        //labelGap: 8,
+                        //labelSize: 8 + 12 + 8,
+                        //stroke: "red",
+                    }
+                ],
+            };
+
+            let uplot = new uPlot(opts, data, document.body);
+        }
+
+        var refreshButton = document.getElementById("loadChartButton");
+        refreshButton.addEventListener("click", loadChartButtonEvent);
+        refreshButton.addEventListener("touchstart", loadChartButtonEvent);
+
+        function datalogNameSelectEvent(e) {
+            var selectedValue = e.value;
+            if (selectedValue == datalogNamePlaceholderValue)
+                return;
+            connection.invoke("Data", selectedValue).catch(function (err) {
+                return console.error(err.toString());
+            });
+        }
+
+                                        //var select = document.getElementById("datalogName");
+                                        //select.addEventListener("select", datalogNameSelectEvent);
     </script>
 </body>
 </html>

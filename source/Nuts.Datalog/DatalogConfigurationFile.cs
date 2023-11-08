@@ -4,7 +4,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Nuts.Datalog
 {
-    // The datalog.json and datalog.csv will have the same filename (different extension) and will be in the same directory
+    // The datalog.config and datalog.csv will have the same filename (different extension) and will be in the same directory
     public class DatalogConfigurationFile
     {
         public List<DatalogConfigApiField> ApiFields { get; set; }
