@@ -10,7 +10,6 @@
 
     public class DataResponseDto
     {
-        public List<DatalogColumn> Columns { get; set; }
-        public List<string[]> Data { get; set; }
+        public List<DatalogColumn> Columns { get; set; } = new();
     }
 }

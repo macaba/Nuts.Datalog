@@ -1,16 +1,11 @@
-﻿//using CsvHelper;
-//using CsvHelper.Configuration;
-using Microsoft.AspNetCore.SignalR;
-using NReco.Csv;
-using System.Globalization;
-using System.Text.Json;
+﻿using Microsoft.AspNetCore.SignalR;
 
 namespace Nuts.Datalog.Web
 {
     public class DatalogHub : Hub
     {
-        string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Configs");
-        string datalogDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Datalogs");
+        private readonly string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Configs");
+        private readonly string datalogDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Datalogs");
 
         public async Task Enumerate()
         {
@@ -45,52 +40,10 @@ namespace Nuts.Datalog.Web
 
                 var response = new DataResponseDto
                 {
-                    Columns = columns,
-                    Data = new()
+                    Columns = columns
                 };
 
-                // This approach is slower than it could be because everything is being converted into UTF16 strings. It might be better to use a CSV reader that can read the data as it is in the file and return ReadOnlySpan<byte>?
-                var csvHeaders = new List<string>();
-                using (var stream = new FileStream(datalogPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan))
-                using (var streamRdr = new StreamReader(stream))
-                {
-                    var csvReader = new CsvReader(streamRdr, ",");
-                    csvReader.Read();   // Read header
-                    for(int i = 0; i < csvReader.FieldsCount; i++)
-                    {
-                        csvHeaders.Add(csvReader[i]);
-                    }
-                    while (csvReader.Read())
-                    {
-                        var fields = new string[csvReader.FieldsCount];
-                        for (int i = 0; i < csvReader.FieldsCount; i++)
-                        {
-                            fields[i] = csvReader[i];
-                        }
-                        response.Data.Add(fields);
-                    }
-                }
-
                 await Clients.Caller.SendAsync("Data", response);
-                //foreach (var column in config.Columns)
-                //{
-
-                //}
-
-                //var csvRecords = ReadCsvFile(datalogPath);
-
-                //if (csvRecords != null && csvRecords.Any())
-                //{
-                //    string jsonData = ConvertCsvToJSON(csvRecords);
-                //    await Clients.Caller.SendAsync("Data", jsonData);
-                //}
-
-
-
-
-                //var lines = File.ReadAllLines(datalogPath);
-                //var data = lines.Select(line => line.Split(',').Select(value => double.Parse(value)));
-                //await Clients.Caller.SendAsync("Data", data);
             }
         }
 

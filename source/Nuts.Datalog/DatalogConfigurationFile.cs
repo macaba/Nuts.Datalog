@@ -10,6 +10,7 @@ namespace Nuts.Datalog
         public List<DatalogConfigApiField> ApiFields { get; set; }
         public List<DatalogConfigCodeField> CodeFields { get; set; }
         public List<DatalogConfigColumn> Columns { get; set; }
+        public DatalogStorageFormat StorageFormat { get; set; }
 
         public void WriteToDisk(string path)
         {
@@ -64,6 +65,12 @@ namespace Nuts.Datalog
         public required string Format { get; set; }
     }
 
+    public class DatalogStorageFormat
+    {
+        public required DatalogFileFormatDelimiter Delimiter { get; set; }
+        public required string Extension { get; set; }
+    }
+
     public enum DatalogFieldType
     {
         String,
@@ -71,5 +78,12 @@ namespace Nuts.Datalog
         Float,
         Double,
         Timestamp
+    }
+
+    public enum DatalogFileFormatDelimiter
+    {
+        Comma,
+        Semicolon,
+        Tab
     }
 }

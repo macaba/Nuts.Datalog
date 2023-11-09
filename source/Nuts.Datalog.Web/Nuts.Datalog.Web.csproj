@@ -5,15 +5,26 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	<PublishSingleFile>true</PublishSingleFile>
+	<PublishTrimmed>true</PublishTrimmed>
+	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+    <None Include="wwwroot\pages\home.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Nuts.Datalog\Nuts.Datalog.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Pages\Home.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="Datalogs\HelloWorld.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>

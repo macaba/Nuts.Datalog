@@ -18,6 +18,7 @@
     <!--<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.2/cdn/shoelace-autoloader.js"></script>-->
     <script src="lib/uPlot@1.6.27/uPlot.iife.min.js"></script>
     <script src="lib/signalr@7.0.12/signalr.min.js"></script>
+    <script src="lib/papaparse@5.4.0/papaparse.min.js"></script>
     <script>
         "use strict";
 
@@ -111,27 +112,95 @@
             var xAxisColumn = document.getElementById("xAxisColumn").value;
             var yAxisColumn = document.getElementById("yAxisColumn").value;
 
-            if (dataCache == null || datalogName == datalogNamePlaceholderValue || xAxisColumn == xAxisColumnPlaceholderValue || yAxisColumn == yAxisColumnPlaceholderValue)
+            if (datalogName == datalogNamePlaceholderValue || xAxisColumn == xAxisColumnPlaceholderValue || yAxisColumn == yAxisColumnPlaceholderValue)
                 return;
+
+            var xValues = [];
+            var yValues = [];
+
+            var downloadUrl = "/download/" + datalogName + ".csv";
+            Papa.parse(downloadUrl, {
+                download: true,
+                //worker: true,
+                header: true,
+                //dynamicTyping: true,
+                skipEmptyLines: true,
+                step: function (row) {
+                    console.log("Row:", row.data);
+                    xValues.push(row.data[xAxisColumn]);
+                    yValues.push(row.data[yAxisColumn]);
+                },
+                complete: function () {
+                    console.log("All done!");
+                    let data = [
+                        xValues,
+                        yValues
+                    ];
+
+                    let opts = {
+                        title: datalogName,
+                        id: "chart1",
+                        class: "my-chart",
+                        width: 800,
+                        height: 600,
+                        legend: {
+                            show: false,
+                        },
+                        scales: {
+                            x: {
+                                time: false,
+                            },
+                        },
+                        series: [
+                            {},
+                            {
+                                show: true,
+                                spanGaps: false,
+                                label: yAxisColumn,
+                                stroke: "red",
+                                width: 1,
+                            }
+                        ],
+                        axes: [
+                            {
+                                //	size: 30,
+                                label: xAxisColumn,
+                                //labelSize: 20,
+                            },
+                            {
+                                //space: 50,
+                                //	size: 40,
+                                //side: 1,
+                                label: yAxisColumn,
+                                //labelGap: 8,
+                                //labelSize: 8 + 12 + 8,
+                                //stroke: "red",
+                            }
+                        ],
+                    };
+
+                    let uplot = new uPlot(opts, data, document.body);
+                }
+            });
 
 
             // Now iterate through dataCache to find the indices of the columns
-            var xAxisColumnIndex = -1;
-            var yAxisColumnIndex = -1;
-            for (var i = 0; i < dataCache.columns.length; i++) {
-                if (dataCache.columns[i].header == xAxisColumn)
-                    xAxisColumnIndex = i;
-                if (dataCache.columns[i].header == yAxisColumn)
-                    yAxisColumnIndex = i;
-            }
-            var xValues = [];
-            var yValues = [];
-            for (var i = 0; i < dataCache.data.length; i++) {
-                var x = dataCache.data[i][xAxisColumnIndex];
-                var y = dataCache.data[i][yAxisColumnIndex];
-                xValues.push(x);
-                yValues.push(y);
-            }
+            //var xAxisColumnIndex = -1;
+            //var yAxisColumnIndex = -1;
+            //for (var i = 0; i < dataCache.columns.length; i++) {
+            //    if (dataCache.columns[i].header == xAxisColumn)
+            //        xAxisColumnIndex = i;
+            //    if (dataCache.columns[i].header == yAxisColumn)
+            //        yAxisColumnIndex = i;
+            //}
+            //var xValues = [];
+            //var yValues = [];
+            //for (var i = 0; i < dataCache.data.length; i++) {
+            //    var x = dataCache.data[i][xAxisColumnIndex];
+            //    var y = dataCache.data[i][yAxisColumnIndex];
+            //    xValues.push(x);
+            //    yValues.push(y);
+            //}
 
 
             //let data = [
@@ -139,56 +208,6 @@
             //    [35, 71],    // y-values (series 1)
             //    [90, 15],    // y-values (series 2)
             //];
-
-            let data = [
-                xValues,
-                yValues
-            ];
-
-
-            let opts = {
-                title: datalogName,
-                id: "chart1",
-                class: "my-chart",
-                width: 800,
-                height: 600,
-                legend: {
-                    show: false,
-                },
-                scales: {
-                    x: {
-                        time: false,
-                    },
-                },
-                series: [
-                    {},
-                    {
-                        show: true,
-                        spanGaps: false,
-                        label: yAxisColumn,
-                        stroke: "red",
-                        width: 1,
-                    }
-                ],
-                axes: [
-                    {
-                        //	size: 30,
-                        label: xAxisColumn,
-                        //labelSize: 20,
-                    },
-                    {
-                        //space: 50,
-                        //	size: 40,
-                        //side: 1,
-                        label: yAxisColumn,
-                        //labelGap: 8,
-                        //labelSize: 8 + 12 + 8,
-                        //stroke: "red",
-                    }
-                ],
-            };
-
-            let uplot = new uPlot(opts, data, document.body);
         }
 
         var refreshButton = document.getElementById("loadChartButton");
@@ -204,8 +223,8 @@
             });
         }
 
-                                        //var select = document.getElementById("datalogName");
-                                        //select.addEventListener("select", datalogNameSelectEvent);
+                                                //var select = document.getElementById("datalogName");
+                                                //select.addEventListener("select", datalogNameSelectEvent);
     </script>
 </body>
 </html>

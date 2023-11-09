@@ -4,6 +4,7 @@ using Nuts.Datalog.Scripting;
 using System.Dynamic;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 
 namespace Nuts.Datalog
 {
@@ -51,9 +52,15 @@ namespace Nuts.Datalog
                 //Load all the first in column values
                 //firstValueInColumn = new ExpandoObject();
             }
+
+            //Task.Run(async () =>
+            //{
+            //    await Preload();
+            //    await Run();
+            //}, subTaskCts.Token);
         }
 
-        public async void WriteLine(Dictionary<string, string> keyValuePairs)
+        public async void WriteLine(Dictionary<string, JsonElement> keyValuePairs)
         {
             var now = DateTimeOffset.Now;
             dynamic serverExpando = new ExpandoObject();
@@ -70,7 +77,7 @@ namespace Nuts.Datalog
             {
                 if (keyValuePairs.ContainsKey(apiMapping.Field))
                 {
-                    var apiValue = keyValuePairs[apiMapping.Field];
+                    var apiValue = keyValuePairs[apiMapping.Field].ToString();
                     switch (apiMapping.Type)
                     {
                         case DatalogFieldType.String:
@@ -83,28 +90,28 @@ namespace Nuts.Datalog
                         {
                             int value = int.Parse(apiValue);
                             globals.Add(apiMapping.Field, value);
-                            CheckAndAddFirstValueInColumn(apiMapping.Field, apiValue);
+                            CheckAndAddFirstValueInColumn(apiMapping.Field, value);
                             break;
                         }
                         case DatalogFieldType.Float:
                         {
                             var value = float.Parse(apiValue);
                             globals.Add(apiMapping.Field, value);
-                            CheckAndAddFirstValueInColumn(apiMapping.Field, apiValue);
+                            CheckAndAddFirstValueInColumn(apiMapping.Field, value);
                             break;
                         }
                         case DatalogFieldType.Double:
                         {
                             var value = double.Parse(apiValue);
                             globals.Add(apiMapping.Field, value);
-                            CheckAndAddFirstValueInColumn(apiMapping.Field, apiValue);
+                            CheckAndAddFirstValueInColumn(apiMapping.Field, value);
                             break;
                         }
                         case DatalogFieldType.Timestamp:
                         {
                             var value = DateTimeOffset.Parse(apiValue);
                             globals.Add(apiMapping.Field, value);
-                            CheckAndAddFirstValueInColumn(apiMapping.Field, apiValue);
+                            CheckAndAddFirstValueInColumn(apiMapping.Field, value);
                             break;
                         }
                         default:
@@ -184,6 +191,16 @@ namespace Nuts.Datalog
             var runner = (ScriptRunner<T>)scriptRunners[codeMapping.Field];
             var instance = Activator.CreateInstance(typeInfo.Type, new object[] { globals });
             return runner.Invoke(instance);
+        }
+
+        private async Task Preload()
+        {
+
+        }
+
+        private async Task Run()
+        {
+
         }
     }
 }
